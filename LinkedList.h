@@ -1,19 +1,12 @@
 # ifndef LINKED_LIST_H
 # define LINKED_LIST_H
 #include <ostream>
-
-// Объявление заранее 
-template<typename T>
-class LinkedList;
-
-template<typename T> 
-std::ostream& operator<<(std::ostream& os, const LinkedList<T>& list);
+#include <iostream>
 
 
 template<typename T>
 class LinkedList {
 friend std::ostream& operator<<<T>(std::ostream& os, const LinkedList& list);
-
 private:
     struct Node {
         Node(T value): value(value), prev(nullptr), next(nullptr) {}
@@ -26,6 +19,19 @@ private:
     Node* tail_ = nullptr;
     size_t size_ = 0;
 public:
+    class ListIterator {
+        Node* cur_ = nullptr;
+        ListIterator(Node* head): cur_(head) {};
+        friend LinkedList;
+    public:
+        bool has_next() const { return cur_; }
+        T& next() {
+            T& v = cur_->value;
+            cur_ = cur_->next;
+            return v;
+        }
+    };
+
     LinkedList() {}
 
     LinkedList(const LinkedList& list) {
@@ -55,10 +61,13 @@ public:
             head_ = head_->next;
             delete temp;
         }
+        //std::cout << "LinkedList (" << size_ << ") destroyed\n";
     }
 
     size_t size() const { return size_; }
     bool empty() const { return size_ == 0; }
+
+    ListIterator iterator() { return ListIterator(head_); }
 
     void push_head(T value) {
         Node* node = new Node(value);
