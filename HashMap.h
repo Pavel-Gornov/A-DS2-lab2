@@ -62,19 +62,85 @@ public:
             std::cout << buckets_[i] << "\n";
         }
     }
-    // bool contains(const V& value) const {}
-    // V& search(K key) const;
-    // int count(K key) const;
+
+    bool contains(const V& value) const {
+        for (size_t i = 0; i < m_; i++) {
+            auto it = buckets_[i].iterator();
+            while (it.has_next()) {
+                if (it.next().value == value) return true;
+            }
+        }
+        return false;
+    }
+
+    bool contains(K key) const {
+        size_t idx = hash_(key);
+        auto it = buckets_[idx].iterator();
+        while (it.has_next()) {
+            if (it.next().key == key) return true;
+        }
+        return false;
+    }
+
+    V* search(K key) const {
+        size_t idx = hash_(key);
+        auto it = buckets_[idx].iterator();
+        while (it.has_next()) {
+            Pair<K, V>& temp = it.next();
+            if (temp.key == key) return &temp.value;
+        }
+        return nullptr;
+    }
+    
+    size_t count(K key) const {
+        size_t idx = hash_(key);
+        return buckets_[idx].size();
+    }
+
+    /* Доступ по ключу */
+    V operator[](K key) const {
+        size_t idx = hash_(key);
+        auto it = buckets_[idx].iterator();
+        while (it.has_next()) {
+            Pair<K, V>& temp = it.next();
+            if (temp.key == key) return temp.value;
+        }
+        throw std::logic_error("Ошибка ключа!");
+    }
+
+    /* Вставка или изменение значения по ключу */
+    V& operator[](K key) {
+        if (load_factor_() > 2)
+            this->expand_table_();
+
+        size_t idx = hash_(key);
+        auto it = buckets_[idx].iterator();
+        while (it.has_next()) {
+            Pair<K, V>& temp = it.next();
+            if (temp.key == key) return temp.value;
+        }
+        Pair p = Pair(key, V());
+        buckets_[idx].push_tail(p);
+        size_++;
+
+        return buckets_[idx][buckets_[idx].size() - 1].value;
+    }
+
+    void insert_or_assign(K key, V& value) {
+        this->operator[](key) = value;
+    }
+
 
     bool insert(K key, const V& value) {
+        if (load_factor_() > 2)
+            this->expand_table_();
+
         size_t idx = hash_(key);
         Pair p = Pair(key, value);
 
-        auto it = buckets_[idx].iterator();
-        while (it.has_next()) {
-            if (it.next().key == p.key) return false;
-        }
+        if (this->contains(key)) return false;
         buckets_[idx].push_tail(p);
+        size_++;
         return true;
     }
 
@@ -86,20 +152,50 @@ public:
             Pair p = it.next();
             if (p.key == key) {
                 buckets_[idx].delete_node(p);
+                size_--;
                 return true;
             }
         }
         return false;
     }
 
-    // void insert_or_assign(K key, V& value);
 private:
     LinkedList<Pair<K, V>>* buckets_ = nullptr;
     size_t m_ = 0;
     size_t size_ = 0;
 
+    // TODO: сделать хоть чуть-чуть лучше
+    inline static size_t hash(K key, size_t m) {
+        return key % m;
+    }
     size_t hash_(K key) const {
-        return key % m_;
+        return hash(key, m_);
+    }
+
+    inline double load_factor_() const {
+        if (m_ == 0) return INFINITY;
+        return ( (double) size_ / (double) m_);
+    }
+
+    void expand_table_() {
+        size_t new_m = 2;
+        if (m_ != 0) new_m = m_ * 2;
+        
+        LinkedList<Pair<K, V>>* new_buckets = new LinkedList<Pair<K, V>>[new_m];
+
+        size_t new_idx = 0;
+        for (size_t i = 0; i < m_; i++) {
+            auto it = buckets_[i].iterator();
+            while (it.has_next()) {
+                Pair<K, V>& temp = it.next();
+                new_idx = hash(temp.key, new_m);
+                new_buckets[new_idx].push_tail(temp); // По-хорошему использовать std::move, но по условию нельзя :(
+            }
+        }
+        
+        delete[] buckets_;
+        buckets_ = new_buckets;
+        m_ = new_m;
     }
 };
 

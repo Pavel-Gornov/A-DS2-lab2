@@ -2,19 +2,15 @@
 #include "HashMap.h"
 
 int main() {
-    HashMap<int, std::string> map1(2);
+    HashMap<int, std::string> map1;
 
-    std::cout << map1.insert(1, "hello1") << "\n";
-    std::cout << map1.insert(6, "hello2") << "\n";
-    std::cout << map1.insert(2, "hello2") << "\n";
-    std::cout << map1.insert(3, "hello2") << "\n";
-    std::cout << map1.insert(3, "hello4") << "\n";
-    std::cout << map1;
-
-    map1.erase(1); map1.erase(3);
-
-    
-    std::cout << map1.insert(1, "hello1") << "\n";
-    std::cout << map1.insert(3, "hello2") << "\n";
+    map1.insert(1, "hello1");
+    map1.insert(6, "hello2");
+    map1.insert(2, "hello2");
+    map1.insert(3, "hello2");
+    map1.insert(3, "hello4");
+    map1[-1] = "world!";
+    map1[6] = "hello world!";
+    map1[0] = "none";
     std::cout << map1;
 }
