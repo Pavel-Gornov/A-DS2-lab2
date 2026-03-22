@@ -63,7 +63,7 @@ public:
         }
     }
 
-    bool contains(const V& value) const {
+    bool contains_value(const V& value) const {
         for (size_t i = 0; i < m_; i++) {
             auto it = buckets_[i].iterator();
             while (it.has_next()) {
@@ -73,7 +73,7 @@ public:
         return false;
     }
 
-    bool contains(K key) const {
+    bool contains_key(K key) const {
         size_t idx = hash_(key);
         auto it = buckets_[idx].iterator();
         while (it.has_next()) {
@@ -94,7 +94,7 @@ public:
     
     size_t count(K key) const {
         size_t idx = hash_(key);
-        return buckets_[idx].size();
+        return buckets_[idx].size() - 1;
     }
 
     /* Доступ по ключу */
@@ -138,7 +138,7 @@ public:
         size_t idx = hash_(key);
         Pair p = Pair(key, value);
 
-        if (this->contains(key)) return false;
+        if (this->contains_key(key)) return false;
         buckets_[idx].push_tail(p);
         size_++;
         return true;
